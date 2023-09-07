@@ -1,0 +1,35 @@
+{
+  "name": "clash-mixin",
+  "version": "1.0.0",
+  "description": "一个适用于 Clash 的 mixin 管理器，允许你以优雅的方式添加插件。",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FurryR/clash-mixin.git"
+  },
+  "keywords": [
+    "clash",
+    "mixin",
+    "plugin",
+    "manager",
+    "utility",
+    "javascript"
+  ],
+  "author": "FurryR",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FurryR/clash-mixin/issues"
+  },
+  "homepage": "https://github.com/FurryR/clash-mixin#readme",
+  "devDependencies": {
+    "eslint": "^8.48.0",
+    "prettier": "^3.0.3"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "yaml": "^2.3.2"
+  }
+}
