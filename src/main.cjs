@@ -1,4 +1,5 @@
 // @ts-check
+const vm = require('node:vm')
 /**
  * @callback MixinFn 插件导出函数类型。
  * @param {{content: Record<string, any>, name: string, url: string}} config Clash 的配置。
@@ -121,29 +122,64 @@ class JSMixin extends Mixin {
           })
         ).data
       } else {
-        console.log('正在加载 JS 插件: (内联)')
+        console.log('[clash-mixin] 正在加载 JS 插件: (内联)')
         data = this.script
       }
-      const module = {
+      const ctx = {
+        module: {
           exports: {
             /** @type {MixinFn} */
             parse: (p) => p.content,
           },
         },
-        tmp = {}
-      Object.assign(tmp, globalThis)
-      tmp.config = this.config
-      {
-        // eslint-disable-next-line no-unused-vars
-        const globalThis = tmp
-        // eslint-disable-next-line no-unused-vars
-        const config = tmp.config
-        eval(data)
+        config: this.config,
       }
-      return await module.exports.parse(
-        { content, name, url },
-        { yaml, axios, notify },
-      )
+      for (const [k, v] of Object.entries(
+        Object.getOwnPropertyDescriptors(globalThis),
+      )) {
+        if (
+          k != 'globalThis' &&
+          k != 'module' &&
+          k != 'window' &&
+          k != 'global'
+        )
+          Object.defineProperty(ctx, k, v)
+      }
+      Object.defineProperties(ctx, {
+        global: {
+          get: () => ctx,
+        },
+        window: {
+          get: () => ctx,
+        },
+        globalThis: {
+          get: () => ctx,
+        },
+      })
+      try {
+        // eslint-disable-next-line no-unused-vars
+        vm.runInNewContext(data, ctx)
+      } catch (e) {
+        if (this.script instanceof URL) {
+          console.error(`[clash-mixin] ${this.script} 在加载时发生错误:`, e)
+        } else {
+          console.error(`[clash-mixin] (内联) 在加载时发生错误:`, e)
+        }
+        throw e
+      }
+      try {
+        return await ctx.module.exports.parse(
+          { content, name, url },
+          { yaml, axios, notify },
+        )
+      } catch (e) {
+        if (this.script instanceof URL) {
+          console.error(`[clash-mixin] ${this.script} 在应用时发生错误:`, e)
+        } else {
+          console.error(`[clash-mixin] (内联) 在应用时发生错误:`, e)
+        }
+        throw e
+      }
     }
   }
   /**
