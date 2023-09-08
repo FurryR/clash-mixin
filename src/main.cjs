@@ -45,7 +45,7 @@ class YAMLMixin extends Mixin {
     return async ({ content }, { yaml, axios }) => {
       let data
       if (this.yaml instanceof URL) {
-        console.log('[clash-mixin] 正在加载 YAML 插件: ', this.yaml.toString())
+        console.log(`[clash-mixin] 正在加载 YAML 插件: ${this.yaml}`)
         data = yaml.parse(
           (
             await axios.get(this.yaml, {
@@ -114,7 +114,7 @@ class JSMixin extends Mixin {
     return async ({ content, name, url }, { yaml, axios, notify }) => {
       let data
       if (this.script instanceof URL) {
-        console.log('[clash-mixin] 正在加载 JS 插件: ', url.toString())
+        console.log(`[clash-mixin] 正在加载 JS 插件: ${this.script}`)
         data = (
           await axios.get(this.script, {
             responseType: 'text',
