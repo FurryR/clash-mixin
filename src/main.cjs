@@ -45,6 +45,7 @@ class YAMLMixin extends Mixin {
     return async ({ content }, { yaml, axios }) => {
       let data
       if (this.yaml instanceof URL) {
+        console.log('正在加载 YAML 插件: ', this.yaml.toString())
         data = yaml.parse(
           (
             await axios.get(this.yaml, {
@@ -53,6 +54,7 @@ class YAMLMixin extends Mixin {
           ).data,
         )
       } else {
+        console.log('正在加载 YAML 插件: (内联)')
         data = yaml.parse(this.yaml)
       }
       for (const [k, v] of Object.entries(data)) {
@@ -112,12 +114,14 @@ class JSMixin extends Mixin {
     return async ({ content, name, url }, { yaml, axios, notify }) => {
       let data
       if (this.script instanceof URL) {
+        console.log('正在加载 JS 插件: ', url.toString())
         data = (
           await axios.get(this.script, {
             responseType: 'text',
           })
         ).data
       } else {
+        console.log('正在加载 JS 插件: (内联)')
         data = this.script
       }
       const module = {
@@ -132,6 +136,8 @@ class JSMixin extends Mixin {
       {
         // eslint-disable-next-line no-unused-vars
         const globalThis = tmp
+        // eslint-disable-next-line no-unused-vars
+        const config = tmp.config
         eval(data)
       }
       return await module.exports.parse(
