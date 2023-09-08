@@ -1,5 +1,4 @@
 // @ts-check
-const vm = require('vm')
 /**
  * @callback MixinFn 插件导出函数类型。
  * @param {{content: Record<string, any>, name: string, url: string}} config Clash 的配置。
@@ -80,7 +79,7 @@ class YAMLMixin extends Mixin {
             } else {
               for (const [k, v] of Object.entries(new_value)) {
                 if (value[k]) {
-                  value[k] = this.callback(`${key}["${k}"]`, value[k], v)
+                  value[k] = this.callback(`${key}/${k}`, value[k], v)
                 } else {
                   value[k] = v
                 }
@@ -98,48 +97,52 @@ class YAMLMixin extends Mixin {
  */
 class JSMixin extends Mixin {
   /**
-   * @type {URL | MixinFn} JS 文件的地址，或者内联。
+   * @type {URL | string} JS 文件的地址，或者内联。
    */
   script
+  /**
+   * @type {?Record<string, string>} 对于这个插件的配置。将会设置在 globalThis.config 中。
+   */
+  config
   /**
    * 获取这个插件。
    * @returns {MixinFn} 最终的返回类型。
    */
   export() {
     return async ({ content, name, url }, { yaml, axios, notify }) => {
+      let data
       if (this.script instanceof URL) {
-        const data = yaml.parse(
-          (
-            await axios.get(this.script, {
-              responseType: 'text',
-            })
-          ).data,
-        )
-        const obj = {
-          require,
-          module: {
-            exports: {
-              parse: ({ content, name, url }, { yaml, axios, notify }) =>
-                content,
-            },
-          },
-        }
-        vm.runInNewContext(data, obj)
-        return await obj.module.exports.parse(
-          { content, name, url },
-          { yaml, axios, notify },
-        )
+        data = (
+          await axios.get(this.script, {
+            responseType: 'text',
+          })
+        ).data
+      } else {
+        data = this.script
       }
-      return await this.script({ content, name, url }, { yaml, axios, notify })
+      globalThis.config = this.config
+      const module = {
+        exports: {
+          /** @type {MixinFn} */
+          parse: p => p.content,
+        },
+      }
+      eval(data)
+      return await module.exports.parse(
+        { content, name, url },
+        { yaml, axios, notify },
+      )
     }
   }
   /**
    * 构造 JS 插件混入。
-   * @param {URL | MixinFn} script JS 文件的地址，或者内联。
+   * @param {URL | string} script JS 文件的地址，或者内联。
+   * @param {?Record<string, any>} config 对于这个插件的配置。将会设置在 globalThis.config 中。
    */
-  constructor(script) {
+  constructor(script, config = null) {
     super()
     this.script = script
+    this.config = config
   }
 }
 /**
@@ -181,11 +184,18 @@ class ClashInstance {
     return await this.fn({ content, name, url }, { yaml, axios, notify })
   }
   constructor() {
-    this.fn = ({ content, name, url }, { yaml, axios, notify }) => content
+    this.fn = p => p.content
   }
 }
 const Clash = new ClashInstance()
 
 // Clash.use(...) here
 
-module.exports.parse = Clash.export()
+module.exports = {
+  Mixin,
+  YAMLMixin,
+  JSMixin,
+  ClashInstance,
+  Clash,
+  parse: Clash.export(),
+}
