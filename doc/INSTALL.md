@@ -21,12 +21,14 @@
 
    ```javascript
    const _yaml = require('yaml')
-   console.log(
+   const fs = require('fs')
+   fs.writeFileSync(
+     '输出文件名',
      _yaml.stringify(
        await Clash.apply(
          {
            content: _yaml.parse(
-             require('fs').readFileSync('Clash 配置文件名').toString('UTF-8'),
+             fs.readFileSync('Clash 配置文件名').toString('UTF-8'),
            ),
            name: '',
            url: '',
@@ -41,4 +43,4 @@
    )
    ```
 
-4. 运行 `node src/main.cjs > profile.yaml` 来获得处理后的 Clash 配置文件。
+4. 运行 `node src/main.cjs` 来获得处理后的 Clash 配置文件。
