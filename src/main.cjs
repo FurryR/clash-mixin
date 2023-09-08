@@ -120,14 +120,20 @@ class JSMixin extends Mixin {
       } else {
         data = this.script
       }
-      globalThis.config = this.config
       const module = {
-        exports: {
-          /** @type {MixinFn} */
-          parse: p => p.content,
+          exports: {
+            /** @type {MixinFn} */
+            parse: (p) => p.content,
+          },
         },
+        tmp = {}
+      Object.assign(tmp, globalThis)
+      tmp.config = this.config
+      {
+        // eslint-disable-next-line no-unused-vars
+        const globalThis = tmp
+        eval(data)
       }
-      eval(data)
       return await module.exports.parse(
         { content, name, url },
         { yaml, axios, notify },
@@ -184,7 +190,7 @@ class ClashInstance {
     return await this.fn({ content, name, url }, { yaml, axios, notify })
   }
   constructor() {
-    this.fn = p => p.content
+    this.fn = (p) => p.content
   }
 }
 const Clash = new ClashInstance()

@@ -5,8 +5,8 @@
   "main": "src/index.cjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint ./src",
-    "fix": "eslint ./src --fix",
+    "lint": "eslint ./src --ext .cjs",
+    "fix": "eslint ./src --fix --ext .cjs",
     "prettier": "prettier ./src -c -w"
   },
   "repository": {
