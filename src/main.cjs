@@ -71,7 +71,7 @@ class YAMLMixin extends Mixin {
         console.groupEnd()
         throw e
       }
-      console.groupCollapsed('🔬 加载中')
+      console.groupCollapsed('🔬 安装中')
       for (const [k, v] of Object.entries(data)) {
         content[k] = this.callback(k, content[k], v)
         console.log(`🧪 ${k} 混入完成`)
@@ -181,7 +181,7 @@ class JSMixin extends Mixin {
           get: () => ctx,
         },
       })
-      console.groupCollapsed('🔬 加载中')
+      console.groupCollapsed('🔬 安装中')
       try {
         // eslint-disable-next-line no-unused-vars
         vm.runInNewContext(data, ctx)
@@ -268,7 +268,7 @@ class ClashInstance {
       return ret
     } catch (e) {
       console.error('❌ 加载失败。\n', e)
-      console.error('🔍 请检查最后一个加载完成的插件。')
+      console.error('🔍 请检查最后一个安装的插件。')
       console.groupEnd()
       throw '[clash-mixin] ❌ 发生错误，请检查 DevTools 来获得更多信息'
     }
