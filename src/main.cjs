@@ -156,26 +156,26 @@ class JSMixin extends Mixin {
       console.log('📄 下载完成')
       console.groupCollapsed('🔬 安装中')
       try {
-        globalThis.config = this.config
         eval(data)
-        delete globalThis.config
       } catch (e) {
         console.groupEnd()
         console.error('❌ 发生解析时错误\n', e)
         console.groupEnd()
         throw e
       }
-
+      globalThis.config = this.config
       try {
         const ret = await module.exports.parse(
           { content, name, url },
           { yaml, axios, notify },
         )
+        delete globalThis.config
         console.groupEnd()
         console.log('✅ 安装完成')
         console.groupEnd()
         return ret
       } catch (e) {
+        delete globalThis.config
         console.groupEnd()
         console.error('❌ 发生运行时错误\n', e)
         console.groupEnd()
