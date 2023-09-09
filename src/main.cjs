@@ -46,21 +46,39 @@ class YAMLMixin extends Mixin {
     return async ({ content }, { yaml, axios }) => {
       let data
       if (this.yaml instanceof URL) {
-        console.log(`[clash-mixin] 正在加载 YAML 插件: ${this.yaml}`)
-        data = yaml.parse(
-          (
+        console.groupCollapsed(`🛠 正在安装 ${this.yaml} [YAML]`)
+        try {
+          data = (
             await axios.get(this.yaml, {
               responseType: 'text',
             })
-          ).data,
-        )
+          ).data
+          
+        } catch (e) {
+          console.error('❌ 发生下载错误\n', e)
+          console.groupEnd()
+          throw e
+        }
       } else {
-        console.log('正在加载 YAML 插件: (内联)')
-        data = yaml.parse(this.yaml)
+        console.groupCollapsed('🛠 正在安装 (内联) [YAML]')
+        data = this.yaml
       }
+      console.log('📄 下载完成')
+      try {
+        data = yaml.parse(data)
+      } catch (e) {
+        console.error('❌ 发生解析时错误\n', e)
+        console.groupEnd()
+        throw e
+      }
+      console.groupCollapsed('🔬 加载中')
       for (const [k, v] of Object.entries(data)) {
         content[k] = this.callback(k, content[k], v)
+        console.log(`🧪 ${k} 混入完成`)
       }
+      console.groupEnd()
+      console.log('✅ 安装完成')
+      console.groupEnd()
       return content
     }
   }
@@ -115,16 +133,23 @@ class JSMixin extends Mixin {
     return async ({ content, name, url }, { yaml, axios, notify }) => {
       let data
       if (this.script instanceof URL) {
-        console.log(`[clash-mixin] 正在加载 JS 插件: ${this.script}`)
-        data = (
-          await axios.get(this.script, {
-            responseType: 'text',
-          })
-        ).data
+        console.groupCollapsed(`🛠 正在安装 ${this.script} [JavaScript]`)
+        try {
+          data = (
+            await axios.get(this.script, {
+              responseType: 'text',
+            })
+          ).data
+        } catch (e) {
+          console.error('❌ 发生下载错误\n', e)
+          console.groupEnd()
+          throw e
+        }
       } else {
-        console.log('[clash-mixin] 正在加载 JS 插件: (内联)')
+        console.groupCollapsed('🛠 正在安装 (内联) [JavaScript]')
         data = this.script
       }
+      console.log('📄 下载完成')
       const ctx = {
         module: {
           exports: {
@@ -156,28 +181,30 @@ class JSMixin extends Mixin {
           get: () => ctx,
         },
       })
+      console.groupCollapsed('🔬 加载中')
       try {
         // eslint-disable-next-line no-unused-vars
         vm.runInNewContext(data, ctx)
       } catch (e) {
-        if (this.script instanceof URL) {
-          console.error(`[clash-mixin] ${this.script} 在加载时发生错误:`, e)
-        } else {
-          console.error(`[clash-mixin] (内联) 在加载时发生错误:`, e)
-        }
+        console.groupEnd()
+        console.error('❌ 发生解析时错误\n', e)
+        console.groupEnd()
         throw e
       }
+
       try {
-        return await ctx.module.exports.parse(
+        const ret = await ctx.module.exports.parse(
           { content, name, url },
           { yaml, axios, notify },
         )
+        console.groupEnd()
+        console.log('✅ 安装完成')
+        console.groupEnd()
+        return ret
       } catch (e) {
-        if (this.script instanceof URL) {
-          console.error(`[clash-mixin] ${this.script} 在应用时发生错误:`, e)
-        } else {
-          console.error(`[clash-mixin] (内联) 在应用时发生错误:`, e)
-        }
+        console.groupEnd()
+        console.error('❌ 发生运行时错误\n', e)
+        console.groupEnd()
         throw e
       }
     }
@@ -220,7 +247,9 @@ class ClashInstance {
    * @returns {MixinFn} Mixin 函数。
    */
   export() {
-    return this.fn
+    return async ({ content, name, url }, { yaml, axios, notify }) => {
+      return await this.apply({ content, name, url }, { yaml, axios, notify })
+    }
   }
   /**
    * 实际使用 Mixin。返回一个 Object。
@@ -229,7 +258,20 @@ class ClashInstance {
    * @returns {Promise<Record<string, any>>} 最终的配置。
    */
   async apply({ content, name, url }, { yaml, axios, notify }) {
-    return await this.fn({ content, name, url }, { yaml, axios, notify })
+    console.groupCollapsed(
+      '[clash-mixin] 💙 请手动展开来查看日志。项目地址: https://github.com/FurryR/clash-mixin',
+    )
+    try {
+      const ret = await this.fn({ content, name, url }, { yaml, axios, notify })
+      console.log('💫 完成！')
+      console.groupEnd()
+      return ret
+    } catch (e) {
+      console.error('❌ 加载失败。\n', e)
+      console.error('🔍 请检查最后一个加载完成的插件。')
+      console.groupEnd()
+      throw '[clash-mixin] ❌ 发生错误，请检查 DevTools 来获得更多信息'
+    }
   }
   constructor() {
     this.fn = (p) => p.content
