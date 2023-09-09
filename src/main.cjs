@@ -1,5 +1,4 @@
 // @ts-check
-const vm = require('node:vm')
 /**
  * @callback MixinFn 插件导出函数类型。
  * @param {{content: Record<string, any>, name: string, url: string}} config Clash 的配置。
@@ -148,42 +147,18 @@ class JSMixin extends Mixin {
         console.groupCollapsed('🛠 正在安装 (内联) [JavaScript]')
         data = this.script
       }
+      const module = {
+        exports: {
+          /** @type {MixinFn} */
+          parse: (p) => p.content,
+        },
+      }
       console.log('📄 下载完成')
-      const ctx = {
-        module: {
-          exports: {
-            /** @type {MixinFn} */
-            parse: (p) => p.content,
-          },
-        },
-        config: this.config,
-      }
-      for (const [k, v] of Object.entries(
-        Object.getOwnPropertyDescriptors(globalThis),
-      )) {
-        if (
-          k != 'globalThis' &&
-          k != 'module' &&
-          k != 'window' &&
-          k != 'global'
-        )
-          Object.defineProperty(ctx, k, v)
-      }
-      Object.defineProperties(ctx, {
-        global: {
-          get: () => ctx,
-        },
-        window: {
-          get: () => ctx,
-        },
-        globalThis: {
-          get: () => ctx,
-        },
-      })
       console.groupCollapsed('🔬 安装中')
       try {
-        // eslint-disable-next-line no-unused-vars
-        vm.runInNewContext(data, ctx)
+        globalThis.config = this.config
+        eval(data)
+        delete globalThis.config
       } catch (e) {
         console.groupEnd()
         console.error('❌ 发生解析时错误\n', e)
@@ -192,7 +167,7 @@ class JSMixin extends Mixin {
       }
 
       try {
-        const ret = await ctx.module.exports.parse(
+        const ret = await module.exports.parse(
           { content, name, url },
           { yaml, axios, notify },
         )
