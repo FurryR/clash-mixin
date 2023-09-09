@@ -269,7 +269,9 @@ class ClashInstance {
       console.error('❌ 加载失败。')
       console.error('🔍 请检查最后一个安装的插件。')
       console.groupEnd()
-      throw '[clash-mixin] ❌ 发生错误，请检查 DevTools 来获得更多信息。'
+      throw new Error(
+        '[clash-mixin] ❌ 发生错误，请检查 DevTools 来获得更多信息。',
+      )
     }
   }
   constructor() {
