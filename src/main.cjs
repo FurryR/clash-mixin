@@ -53,7 +53,6 @@ class YAMLMixin extends Mixin {
               responseType: 'text',
             })
           ).data
-          
         } catch (e) {
           console.error('❌ 发生下载错误\n', e)
           console.groupEnd()
