@@ -259,7 +259,7 @@ class ClashInstance {
    */
   async apply({ content, name, url }, { yaml, axios, notify }) {
     console.groupCollapsed(
-      '[clash-mixin] 💙 请手动展开来查看日志。项目地址: https://github.com/FurryR/clash-mixin',
+      '[clash-mixin] 💙 查看日志 (https://github.com/FurryR/clash-mixin)',
     )
     try {
       const ret = await this.fn({ content, name, url }, { yaml, axios, notify })
@@ -270,7 +270,7 @@ class ClashInstance {
       console.error('❌ 加载失败。\n', e)
       console.error('🔍 请检查最后一个安装的插件。')
       console.groupEnd()
-      throw '[clash-mixin] ❌ 发生错误，请检查 DevTools 来获得更多信息'
+      throw '[clash-mixin] ❌ 发生错误，请检查 DevTools 来获得更多信息。'
     }
   }
   constructor() {
